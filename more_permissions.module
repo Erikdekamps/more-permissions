@@ -52,7 +52,7 @@ function more_permissions_theme() {
  * @return bool
  *   Boolean TRUE if the user has the requested permission.
  *
- * @see user_access()
+ * @see more_permissions_access()
  */
 function more_permissions_access($string, array $account = NULL) {
 
@@ -185,8 +185,6 @@ function more_permissions_module_invoke($type, array &$edit, array $account, str
  *   If $roles is a non-empty array, an array indexed by role ID is returned.
  *   Each value is an array whose keys are the permission strings for the given
  *   role ID. If $roles is empty nothing is returned.
- *
- * @see user_role_permissions()
  */
 function more_permissions_role_permissions(array $roles = array()) {
 
@@ -296,8 +294,8 @@ function more_permissions_role_grant_permissions($rid, array $permissions = arra
   }
 
   // Clear the user access cache.
-  drupal_static_reset('user_access');
-  drupal_static_reset('user_role_permissions');
+  drupal_static_reset('more_permissions_access');
+  drupal_static_reset('more_permissions_role_permissions');
 }
 
 /**
@@ -308,8 +306,8 @@ function more_permissions_role_grant_permissions($rid, array $permissions = arra
  * @param array $permissions
  *   A list of permission names to revoke.
  *
- * @see user_role_change_permissions()
- * @see user_role_grant_permissions()
+ * @see more_permissions_role_change_permissions()
+ * @see more_permissions_role_grant_permissions()
  */
 function more_permissions_role_revoke_permissions($rid, array $permissions = array()) {
   // Revoke permissions for the role.
@@ -319,8 +317,8 @@ function more_permissions_role_revoke_permissions($rid, array $permissions = arr
     ->execute();
 
   // Clear the user access cache.
-  drupal_static_reset('user_access');
-  drupal_static_reset('user_role_permissions');
+  drupal_static_reset('more_permissions_access');
+  drupal_static_reset('more_permissions_role_permissions');
 }
 
 /**
