@@ -110,7 +110,6 @@ function more_permissions_get_extra_permissions() {
       $menu_permission = 'manage ' . $name;
       $extra_permissions[$menu_permission] = array(
         'title' => t('Manage !menu_name', array('!menu_name' => $name)),
-        'restrict access' => TRUE,
       );
     }
   }
@@ -122,7 +121,6 @@ function more_permissions_get_extra_permissions() {
       $taxonomy_permission = 'manage ' . $vocabulary->machine_name;
       $extra_permissions[$taxonomy_permission] = array(
         'title' => t('Manage !vocabylary_name', array('!vocabylary_name' => $vocabulary->machine_name)),
-        'restrict access' => TRUE,
       );
     }
   }
@@ -228,17 +226,116 @@ function more_permissions_role_permissions(array $roles = array()) {
 }
 
 /**
- * Get the menus.
+ * Change permissions for a user role.
+ *
+ * This function may be used to grant and revoke multiple permissions at once.
+ * For example, when a form exposes checkboxes to configure permissions for a
+ * role, the form submit handler may directly pass the submitted values for the
+ * checkboxes form element to this function.
+ *
+ * @param int $rid
+ *   The ID of a user role to alter.
+ * @param array $permissions
+ *   An associative array, where the key holds the permission name and the value
+ *   determines whether to grant or revoke that permission. Any value that
+ *   evaluates to TRUE will cause the permission to be granted. Any value that
+ *   evaluates to FALSE will cause the permission to be revoked.
+ *
+ * @code
+ *   array(
+ *     'administer nodes' => 0,                // Revoke 'administer nodes'
+ *     'administer blocks' => FALSE,           // Revoke 'administer blocks'
+ *     'access user profiles' => 1,            // Grant 'access user profiles'
+ *     'access content' => TRUE,               // Grant 'access content'
+ *     'access comments' => 'access comments', // Grant 'access comments'
+ *   )
+ * @endcode
+ *
+ *   Existing permissions are not changed, unless specified in $permissions.
+ *
+ * @see user_role_grant_permissions()
+ * @see user_role_revoke_permissions()
  */
-function _more_permissions_get_menus() {
-
-  // Work in progress.
+function more_permissions_role_change_permissions($rid, array $permissions = array()) {
+  // Grant new permissions for the role.
+  $grant = array_filter($permissions);
+  if (!empty($grant)) {
+    more_permissions_role_grant_permissions($rid, array_keys($grant));
+  }
+  // Revoke permissions for the role.
+  $revoke = array_diff_assoc($permissions, $grant);
+  if (!empty($revoke)) {
+    more_permissions_role_revoke_permissions($rid, array_keys($revoke));
+  }
 }
 
 /**
- * Get the taxonomy vocabularies.
+ * Grant permissions to a user role.
+ *
+ * @param int $rid
+ *   The ID of a user role to alter.
+ * @param array $permissions
+ *   A list of permission names to grant.
+ *
+ * @see user_role_change_permissions()
+ * @see user_role_revoke_permissions()
  */
-function _more_permissions_get_taxonomy_vocabularies() {
+function more_permissions_role_grant_permissions($rid, array $permissions = array()) {
+  $modules = more_permissions_permission_get_modules();
+  // Grant new permissions for the role.
+  foreach ($permissions as $name) {
+    db_merge('more_permissions')
+      ->key(array(
+        'rid' => $rid,
+        'permission' => $name,
+      ))
+      ->fields(array(
+        'module' => $modules[$name],
+      ))
+      ->execute();
+  }
 
-  // Work in progress.
+  // Clear the user access cache.
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
+}
+
+/**
+ * Revoke permissions from a user role.
+ *
+ * @param int $rid
+ *   The ID of a user role to alter.
+ * @param array $permissions
+ *   A list of permission names to revoke.
+ *
+ * @see user_role_change_permissions()
+ * @see user_role_grant_permissions()
+ */
+function more_permissions_role_revoke_permissions($rid, array $permissions = array()) {
+  // Revoke permissions for the role.
+  db_delete('more_permissions')
+    ->condition('rid', $rid)
+    ->condition('permission', $permissions, 'IN')
+    ->execute();
+
+  // Clear the user access cache.
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
+}
+
+/**
+ * Determine the modules that permissions belong to.
+ *
+ * @return array
+ *   An associative array in the format $permission => $module.
+ */
+function more_permissions_permission_get_modules() {
+  $permissions = array();
+  foreach (module_implements('extra_permission') as $module) {
+    $perms = module_invoke($module, 'extra_permission');
+    foreach ($perms as $key => $value) {
+      $permissions[$key] = $module;
+    }
+  }
+  return $permissions;
 }

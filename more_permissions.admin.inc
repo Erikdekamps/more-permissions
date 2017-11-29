@@ -41,7 +41,7 @@ function more_permissions_admin_permissions($form, $form_state, $rid = NULL) {
 
   foreach ($modules as $module => $display_name) {
     if ($permissions = module_invoke($module, 'extra_permission')) {
-      $form['extra_permission'][] = array(
+      $form['permission'][] = array(
         '#markup' => $module_info[$module]['name'],
         '#id' => $module,
       );
@@ -85,6 +85,22 @@ function more_permissions_admin_permissions($form, $form_state, $rid = NULL) {
   $form['#attached']['js'][] = drupal_get_path('module', 'more_permissions') . '/assets/js/more_permissions.js';
 
   return $form;
+}
+
+/**
+ * Save permissions selected on the administer permissions page.
+ *
+ * @see user_admin_permissions()
+ */
+function more_permissions_admin_permissions_submit($form, &$form_state) {
+  foreach ($form_state['values']['role_names'] as $rid => $name) {
+    more_permissions_role_change_permissions($rid, $form_state['values'][$rid]);
+  }
+
+  drupal_set_message(t('The changes have been saved.'));
+
+  // Clear the cached pages and blocks.
+  cache_clear_all();
 }
 
 /**
@@ -137,8 +153,8 @@ function theme_more_permissions_admin_permissions(array $variables) {
     'attributes' => array('id' => 'more-permissions'),
   ));
   $output .= drupal_render_children($form);
-  return $output;
 
+  return $output;
 }
 
 /**
