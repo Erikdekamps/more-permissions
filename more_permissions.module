@@ -26,6 +26,61 @@ function more_permissions_menu() {
 }
 
 /**
+ * Implements hook_menu_alter().
+ */
+function more_permissions_menu_alter(&$items) {
+
+  // Taxonomy.
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name']['access callback'] = '_more_permissions_taxonomy_access_callback';
+  $items['admin/structure/taxonomy/%taxonomy_vocabulary_machine_name']['access arguments'] = array(3);
+
+  // Menu.
+  $items['admin/structure/menu/manage/%menu']['access callback'] = '_more_permissions_menu_access_callback';
+  $items['admin/structure/menu/manage/%menu']['access arguments'] = array(4);
+
+  // Return the items.
+  return $items;
+}
+
+/**
+ * Access callback for taxonomy.
+ */
+function _more_permissions_taxonomy_access_callback($entity = NULL) {
+
+  global $user;
+
+  // Check access.
+  $access = more_permissions_access('manage ' . $entity->machine_name);
+
+  // Allow admin and allowed items.
+  if ($user->uid == 1 || $access) {
+    return TRUE;
+  }
+
+  // Return FALSE by default.
+  return FALSE;
+}
+
+/**
+ * Access callback for menu.
+ */
+function _more_permissions_menu_access_callback($entity = NULL) {
+
+  global $user;
+
+  // Check access.
+  $access = more_permissions_access('manage ' . $entity['menu_name']);
+
+  // Allow admin and allowed items.
+  if ($user->uid == 1 || $access) {
+    return TRUE;
+  }
+
+  // Return FALSE by default.
+  return FALSE;
+}
+
+/**
  * Implements hook_theme().
  */
 function more_permissions_theme() {
@@ -100,7 +155,7 @@ function more_permissions_get_extra_permissions() {
   $menus = menu_get_menus();
   if (!empty($menus)) {
     foreach ($menus as $menu => $name) {
-      $menu_permission = 'manage ' . $name;
+      $menu_permission = 'manage ' . $menu;
       $extra_permissions[$menu_permission] = array(
         'title' => t('Manage !menu_name', array('!menu_name' => $name)),
       );
