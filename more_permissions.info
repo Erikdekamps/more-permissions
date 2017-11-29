@@ -1,0 +1,4 @@
+name = More permissions
+description = Adds extra permissions for users.
+core = 7.x
+stylesheets[all][] = assets/css/more_permissions.css

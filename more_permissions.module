@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Main module file for more permissions.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function more_permissions_menu() {
+
+  $items['admin/people/more-permissions'] = array(
+    'title' => 'More permissions',
+    'description' => 'Configure additional permissions for users.',
+    'access callback' => 'more_permissions_access',
+    'access arguments' => array('administer more permissions'),
+    'page arguments' => array('more_permissions_admin_permissions'),
+    'page callback' => 'drupal_get_form',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+    'file' => 'more_permissions.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function more_permissions_theme() {
+  return array(
+    'more_permissions_admin_permissions' => array(
+      'render element' => 'form',
+      'file' => 'more_permissions.admin.inc',
+    ),
+    'more_permission_description' => array(
+      'variables' => array('permission_item' => NULL, 'hide' => NULL),
+      'file' => 'more_permissions.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Access callback: administer more permissions.
+ *
+ * @param string $string
+ *   The permission, such as "administer nodes", being checked for.
+ * @param array $account
+ *   (optional) The account to check, if not given use currently logged in user.
+ *
+ * @return bool
+ *   Boolean TRUE if the user has the requested permission.
+ *
+ * @see user_access()
+ */
+function more_permissions_access($string, array $account = NULL) {
+
+  global $user;
+
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  // User #1 has all privileges:
+  if ($account->uid == 1) {
+    return TRUE;
+  }
+
+  // To reduce the number of SQL queries, we cache the user's permissions
+  // in a static variable.
+  // Use the advanced drupal_static() pattern, since this is called very often.
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['perm'] = &drupal_static(__FUNCTION__);
+  }
+  $perm = &$drupal_static_fast['perm'];
+  if (!isset($perm[$account->uid])) {
+    $role_permissions = user_role_permissions($account->roles);
+
+    $perms = array();
+    foreach ($role_permissions as $one_role) {
+      $perms += $one_role;
+    }
+    $perm[$account->uid] = $perms;
+  }
+
+  return isset($perm[$account->uid][$string]);
+}
+
+/**
+ * Implements hook_permission().
+ */
+function more_permissions_permission() {
+  return array(
+    'administer more permissions' => array(
+      'title' => t('Administer more permissions'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Determine the permissions for one or more roles.
+ *
+ * @param array $roles
+ *   An array whose keys are the role IDs of interest, such as $user->roles.
+ *
+ * @return mixed
+ *   If $roles is a non-empty array, an array indexed by role ID is returned.
+ *   Each value is an array whose keys are the permission strings for the given
+ *   role ID. If $roles is empty nothing is returned.
+ *
+ * @see user_role_permissions()
+ */
+function more_permissions_role_permissions(array $roles = array()) {
+
+  // Work in progress.
+}
+
+/**
+ * Get the menus.
+ */
+function _more_permissions_get_menus() {
+
+  // Work in progress.
+}
+
+/**
+ * Get the taxonomy vocabularies.
+ */
+function _more_permissions_get_taxonomy_vocabularies() {
+
+  // Work in progress.
+}
