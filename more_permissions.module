@@ -76,7 +76,7 @@ function more_permissions_access($string, array $account = NULL) {
   }
   $perm = &$drupal_static_fast['perm'];
   if (!isset($perm[$account->uid])) {
-    $role_permissions = user_role_permissions($account->roles);
+    $role_permissions = more_permissions_role_permissions($account->roles);
 
     $perms = array();
     foreach ($role_permissions as $one_role) {
@@ -86,13 +86,6 @@ function more_permissions_access($string, array $account = NULL) {
   }
 
   return isset($perm[$account->uid][$string]);
-}
-
-/**
- * Implements hook_permission().
- */
-function more_permissions_permission() {
-
 }
 
 /**
