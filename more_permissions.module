@@ -3,6 +3,13 @@
 /**
  * @file
  * Main module file for more permissions.
+ *
+ * Todo:
+ * - Menu alter show parents.
+ * - Category in more_permissions_extra_permission.
+ * - User fields permissions with form alter.
+ * - Node fields permissions with form alter.
+ * -
  */
 
 /**
