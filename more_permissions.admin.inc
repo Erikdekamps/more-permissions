@@ -34,19 +34,19 @@ function more_permissions_admin_permissions($form, $form_state, $rid = NULL) {
   // Get a list of all the modules implementing a hook_permission() and sort by
   // display name.
   $modules = array();
-  foreach (module_implements('permission') as $module) {
+  foreach (module_implements('extra_permission') as $module) {
     $modules[$module] = $module_info[$module]['name'];
   }
   asort($modules);
 
   foreach ($modules as $module => $display_name) {
-    if ($permissions = module_invoke($module, 'permission')) {
-      $form['permission'][] = array(
+    if ($permissions = module_invoke($module, 'extra_permission')) {
+      $form['extra_permission'][] = array(
         '#markup' => $module_info[$module]['name'],
         '#id' => $module,
       );
       foreach ($permissions as $perm => $perm_item) {
-        // Fill in default values for the permission.
+        // Fill in default values for the extra_permission.
         $perm_item += array(
           'description' => '',
           'restrict access' => FALSE,
